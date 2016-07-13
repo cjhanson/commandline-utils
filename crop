@@ -1,0 +1,21 @@
+#!/usr/bin/php -f
+<?php
+require_once('prompt.inc.php');
+
+$file = $argv[1];
+
+if (!file_exists($file))
+    exit('File not Found:'."\n".$file."\n");
+
+$x = (int)prompt('X: ');
+$y = (int)prompt('Y: ');
+$width = (int)prompt('W: ');
+$height = (int)prompt('H: ');
+
+$im = imagecreatefrompng($file);
+$crop_area = array('x'=>$x,'y'=> $y,'width'=>$width,'height'=>$height);
+$result = imagecrop($im, $crop_area);
+imagepng($result, $file);
+
+// cleanup
+imagedestroy($im);

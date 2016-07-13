@@ -1,0 +1,13 @@
+#!/usr/bin/php -f
+<?php
+$file = $argv[1];
+
+if (!file_exists($file))
+    exit('File not Found:'."\n".$file."\n");
+
+$im = imagecreatefrompng($file);
+imagefill($im, 0, 0, 0xFF0000);
+imagepng($im, $file);
+
+// cleanup
+imagedestroy($im);

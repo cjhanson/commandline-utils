@@ -1,0 +1,91 @@
+#!/usr/bin/php -f
+<?php
+$file = $argv[1];
+
+if (!file_exists($file))
+    exit('File not Found:'."\n".$file."\n");
+
+$im = imagecreatefrompng($file);
+$bounds = findImageBounds($im);
+
+$w = imagesx($im);
+$h = imagesy($im);
+
+$trim = [];
+$trim['l'] = $bounds['l'];
+$trim['r'] = $w -$bounds['r'];
+$trim['t'] = $bounds['t'];
+$trim['b'] = $h - $bounds['b'];
+
+// trim equally from both sides
+//$trim['l'] = min($trim['l'], $trim['r']);
+//$trim['r'] = $trim['r'];
+
+// ignore top/bottom cropping
+$trim['t'] = 0;
+$trim['b'] = 0;
+
+// calculate new width/height
+$cropW = $w - ($trim['l'] + $trim['r']);
+$cropH = $h - ($trim['t'] + $trim['b']);
+
+// create new output image
+$croppedIm = imagecreatetruecolor($cropW, $cropH);
+imagesavealpha($croppedIm, true);
+// fill with transparency first (127 is alpha 0)
+$trans_color = imagecolorallocatealpha($croppedIm, 0, 0, 0, 127);
+imagefill($croppedIm, 0, 0, $trans_color);
+
+// copy from source to dest
+imagecopy($croppedIm, $im, 0, 0, $trim['l'], $trim['t'], $cropW, $cropH);
+
+// write to file
+imagepng($croppedIm, $file);
+
+// cleanup
+imagedestroy($im);
+imagedestroy($croppedIm);
+
+// helper function
+function findImageBounds($img, $trimColor=null)
+{
+    if (!ctype_xdigit($trimColor)) $trimColor = imagecolorat($img, 0, 0);
+
+    $w = imagesx($img);
+    $h = imagesy($img);
+
+    $top = $h + 1;
+    $bot = 0;
+    $left = $w + 1;
+    $right = 0;
+
+    for($x = 0; $x <= $w; ++$x)
+    {
+        for($y = 0; $y <= $h; ++$y)
+        {
+            $pxColor = imagecolorat($img, $x, $y);
+
+            if($trimColor != $pxColor)
+            {
+                if ($x < $left)
+                    $left = $x;
+
+                if ($x > $right)
+                    $right = $x;
+
+                if ($y < $top)
+                    $top = $y;
+
+                if ($y > $bot)
+                    $bot = $y;
+            }
+        }
+    }
+
+    return [
+               't' => $top,
+               'r' => $right,
+               'b' => $bot,
+               'l' => $left
+           ];
+}
