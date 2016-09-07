@@ -18,8 +18,8 @@ $trim['t'] = $bounds['t'];
 $trim['b'] = $h - $bounds['b'];
 
 // trim equally from both sides
-//$trim['l'] = min($trim['l'], $trim['r']);
-//$trim['r'] = $trim['r'];
+$trim['l'] = min($trim['l'], $trim['r']);
+$trim['r'] = $trim['r'];
 
 // ignore top/bottom cropping
 $trim['t'] = 0;
@@ -47,10 +47,8 @@ imagedestroy($im);
 imagedestroy($croppedIm);
 
 // helper function
-function findImageBounds($img, $trimColor=null)
+function findImageBounds($img)
 {
-    if (!ctype_xdigit($trimColor)) $trimColor = imagecolorat($img, 0, 0);
-
     $w = imagesx($img);
     $h = imagesy($img);
 
@@ -64,8 +62,9 @@ function findImageBounds($img, $trimColor=null)
         for($y = 0; $y <= $h; ++$y)
         {
             $pxColor = imagecolorat($img, $x, $y);
+            $pxAlpha = ($pxColor >> 24) & 0x7F;
 
-            if($trimColor != $pxColor)
+            if($pxAlpha != 127)
             {
                 if ($x < $left)
                     $left = $x;
